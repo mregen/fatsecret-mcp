@@ -2,42 +2,45 @@
 
 using FatSecretMcp.Auth;
 
-var builder = WebApplication.CreateBuilder(args);
-
 if (args.Length > 0 && args[0] == "auth")
 {
-    await AuthCli.RunAsync(args[1..], builder.Configuration);
+    var authBuilder = Host.CreateApplicationBuilder(args);
+    authBuilder.Configuration.AddUserSecrets<Program>();
+    await AuthCli.RunAsync(args[1..], authBuilder.Configuration);
     return;
 }
 
-builder.Services.AddHttpClient();
-builder.Services.AddSingleton(sp => {
-    var config = sp.GetRequiredService<IConfiguration>();
-    var consumerKey = config["FatSecret:OAuth1:ConsumerKey"]
-        ?? throw new InvalidOperationException("FatSecret:OAuth1:ConsumerKey is not configured.");
-    var consumerSecret = config["FatSecret:OAuth1:ConsumerSecret"]
-        ?? throw new InvalidOperationException("FatSecret:OAuth1:ConsumerSecret is not configured.");
-    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(FatSecretOAuth1Client));
-    return new FatSecretOAuth1Client(httpClient, consumerKey, consumerSecret);
-});
-builder.Services.AddSingleton<FatSecretPremierApi>();
-builder.Services.AddSingleton(sp => {
-    var config = sp.GetRequiredService<IConfiguration>();
-    var clientId = config["FatSecret:OAuth2:ClientId"]
-        ?? throw new InvalidOperationException("FatSecret:OAuth2:ClientId is not configured.");
-    var clientSecret = config["FatSecret:OAuth2:ClientSecret"]
-        ?? throw new InvalidOperationException("FatSecret:OAuth2:ClientSecret is not configured.");
-    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(FatSecretOAuth2Client));
-    return new FatSecretOAuth2Client(httpClient, clientId, clientSecret);
-});
+var useHttp = args.Contains("--http");
+var remainingArgs = args.Where(a => a != "--http").ToArray();
 
-builder.Services
-    .AddMcpServer()
-    .WithHttpTransport()
-    .WithToolsFromAssembly();
+if (useHttp)
+{
+    var builder = WebApplication.CreateBuilder(remainingArgs);
+    builder.Configuration.AddUserSecrets<Program>();
+    builder.Services.AddFatSecretClients();
+    builder.Services
+        .AddMcpServer()
+        .WithHttpTransport()
+        .WithToolsFromAssembly();
 
-var app = builder.Build();
+    var app = builder.Build();
+    app.MapMcp("/mcp");
+    app.Run();
+}
+else
+{
+    var builder = Host.CreateApplicationBuilder(remainingArgs);
+    builder.Configuration.AddUserSecrets<Program>();
 
-app.MapMcp("/mcp");
+    // Stdio is the JSON-RPC channel - any stray console log line on stdout would corrupt it.
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
 
-app.Run();
+    builder.Services.AddFatSecretClients();
+    builder.Services
+        .AddMcpServer()
+        .WithStdioServerTransport()
+        .WithToolsFromAssembly();
+
+    await builder.Build().RunAsync();
+}

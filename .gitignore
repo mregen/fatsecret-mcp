@@ -3,6 +3,7 @@ bin/
 obj/
 *.user
 .vs/
+nupkg/
 
 ## OS
 .DS_Store

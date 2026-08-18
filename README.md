@@ -48,13 +48,13 @@ This grants the server access to your own FatSecret account. It's interactive - 
 
 ```bash
 cd src/FatSecretMcp
-ASPNETCORE_ENVIRONMENT=Development dotnet run -- auth request
+dotnet run -- auth request
 ```
 
 This prints a `token`, `token_secret`, and an `authorize_url`. Open the URL, log in, approve the app, and copy the PIN it shows you. Then:
 
 ```bash
-ASPNETCORE_ENVIRONMENT=Development dotnet run -- auth exchange <token> <token_secret> <pin>
+dotnet run -- auth exchange <token> <token_secret> <pin>
 ```
 
 This prints an `access_token` and `access_token_secret`. Store them:
@@ -68,16 +68,29 @@ You only need to do this once - the access token doesn't expire on its own.
 
 ### 3. Run the server
 
+The server supports two transports, chosen at startup - **stdio by default**, or HTTP via a flag:
+
 ```bash
 cd src/FatSecretMcp
-ASPNETCORE_ENVIRONMENT=Development dotnet run --launch-profile http
+
+# stdio (default) - for MCP clients that spawn the process directly
+dotnet run
+
+# HTTP - a long-running server on a port, using ASP.NET Core's standard --urls flag
+dotnet run -- --http --urls http://localhost:5102
 ```
 
-The server listens on `http://localhost:5102`, with the MCP endpoint at `http://localhost:5102/mcp` (Streamable HTTP).
+In HTTP mode the MCP endpoint is at `<url>/mcp` (Streamable HTTP), e.g. `http://localhost:5102/mcp`.
 
 ### 4. Point an MCP client at it
 
-For Claude Code:
+For Claude Code, stdio (default transport):
+
+```bash
+claude mcp add fatsecret-mcp -- dotnet run --project src/FatSecretMcp
+```
+
+Or HTTP, with the server already running from step 3:
 
 ```bash
 claude mcp add --transport http fatsecret-local-dev http://localhost:5102/mcp
@@ -85,9 +98,33 @@ claude mcp add --transport http fatsecret-local-dev http://localhost:5102/mcp
 
 Then restart or reconnect your Claude Code session - new MCP registrations aren't picked up mid-session - and the tools above become available.
 
+## Install as a .NET tool
+
+Instead of running from source, package the server as an installable global tool:
+
+```bash
+dotnet pack src/FatSecretMcp/FatSecretMcp.csproj -c Release -o ./nupkg
+dotnet tool install --global --add-source ./nupkg FatSecretMcp
+```
+
+This installs a `fatsecret-mcp` command (credentials/auth setup above still apply - it reads the same user-secrets). Run it the same way as `dotnet run`:
+
+```bash
+fatsecret-mcp                                       # stdio (default)
+fatsecret-mcp --http --urls http://localhost:5102    # HTTP
+fatsecret-mcp auth request                           # one-time OAuth1 flow
+```
+
+For Claude Code, point it at the installed command instead of `dotnet run`:
+
+```bash
+claude mcp add fatsecret-mcp -- fatsecret-mcp
+```
+
 ## Plan / architecture
 
-- Built on the official [ModelContextProtocol C# SDK](https://github.com/modelcontextprotocol/csharp-sdk) (`ModelContextProtocol.AspNetCore`), using stateless Streamable HTTP transport (`MapMcp`).
+- Built on the official [ModelContextProtocol C# SDK](https://github.com/modelcontextprotocol/csharp-sdk) (`ModelContextProtocol.AspNetCore`). Two transports, chosen at startup by branching on `args` before the host is built: stdio (default, `Host.CreateApplicationBuilder` + `.WithStdioServerTransport()`) or HTTP (`--http`, `WebApplication.CreateBuilder` + stateless Streamable HTTP via `MapMcp`) - the SDK doesn't support registering both on one builder, so `Program.cs` picks one.
+- Also packable as a .NET global tool (`PackAsTool`, see above) as an alternative to (not-yet-built) Docker.
 - Auth:
   - OAuth 1.0a 3-legged flow for the `premier` scope (user food diary, weight, exercise entries) - hand-rolled HMAC-SHA1 signing (`src/FatSecretMcp/Auth/`), no .NET or FatSecret SDK support for this exists.
   - OAuth 2.0 client-credentials flow for `basic`/`barcode` scope (food/recipe search, autocomplete, barcode lookup).
