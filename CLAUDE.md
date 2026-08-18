@@ -12,7 +12,9 @@ A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API
 - 14 issues filed across 3 milestones (Prototype → Full feature coverage → Harden & containerize) covering the full build-out; see GitHub Issues for the authoritative task list.
 - **Milestone 1 in progress**: issues #1 (scaffold) and #2 (MCP host + smoke test) are done — `FatSecretMcp.slnx` + `src/FatSecretMcp/` (net10.0), `ModelContextProtocol.AspNetCore` 2.2.0 wired up with stateless Streamable HTTP at `/mcp`, verified end to end with a placeholder `echo` tool via raw JSON-RPC.
 - **Auth key finding**: a ~10-year-old FatSecret OAuth 1.0 consumer key/secret was confirmed still live (2026-08-18, signed 2-legged request against `foods.search` succeeded). Decision: keep the original two-flow plan below — this legacy key is earmarked for OAuth 1.0a 3-legged (`premier` scope, issue #6) only; a **new** app registration is still needed for OAuth 2.0 client-credentials (`basic` scope, issue #3). The legacy key/secret is already stored in local `dotnet user-secrets` (`FatSecret:OAuth1:ConsumerKey`/`ConsumerSecret`) — never commit it to the repo.
-- Next action is on the user: register a new FatSecret app for OAuth 2.0 credentials (issue #3), which unblocks #4 and #5.
+- **Issue #6 done**: OAuth 1.0a 3-legged flow implemented (`src/FatSecretMcp/Auth/`) and run end to end against the real API. **Confirmed the legacy key has premier scope** — `food_entries.get.v2` returned real diary data. This unblocks #7/#8/#9 (diary/weight/exercise tools) right now, without waiting on OAuth2. Access token/secret stored in local `dotnet user-secrets` (`FatSecret:OAuth1:AccessToken`/`AccessTokenSecret`).
+- **Docs bug found**: FatSecret's current three-legged guide says the request_token step uses POST; it actually requires GET. Worked around, not reported upstream.
+- Next action is on the user: register a new FatSecret app for OAuth 2.0 credentials (issue #3), which unblocks #4 and #5. Meanwhile #7/#8/#9 are open to pick up immediately using the working OAuth1 flow.
 
 ## Prior art (researched, not adopted)
 
