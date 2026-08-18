@@ -21,6 +21,15 @@ builder.Services.AddSingleton(sp => {
     return new FatSecretOAuth1Client(httpClient, consumerKey, consumerSecret);
 });
 builder.Services.AddSingleton<FatSecretPremierApi>();
+builder.Services.AddSingleton(sp => {
+    var config = sp.GetRequiredService<IConfiguration>();
+    var clientId = config["FatSecret:OAuth2:ClientId"]
+        ?? throw new InvalidOperationException("FatSecret:OAuth2:ClientId is not configured.");
+    var clientSecret = config["FatSecret:OAuth2:ClientSecret"]
+        ?? throw new InvalidOperationException("FatSecret:OAuth2:ClientSecret is not configured.");
+    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(FatSecretOAuth2Client));
+    return new FatSecretOAuth2Client(httpClient, clientId, clientSecret);
+});
 
 builder.Services
     .AddMcpServer()
