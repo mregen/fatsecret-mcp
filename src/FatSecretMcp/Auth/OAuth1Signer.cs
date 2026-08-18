@@ -10,8 +10,7 @@ public static class OAuth1Signer
 {
     public static Dictionary<string, string> BuildBaseParams(string consumerKey, string? token = null)
     {
-        var parameters = new Dictionary<string, string>
-        {
+        var parameters = new Dictionary<string, string> {
             ["oauth_consumer_key"] = consumerKey,
             ["oauth_nonce"] = Guid.NewGuid().ToString("N"),
             ["oauth_signature_method"] = "HMAC-SHA1",
@@ -47,7 +46,10 @@ public static class OAuth1Signer
 
         var signingKey = $"{PercentEncode(consumerSecret)}&{PercentEncode(tokenSecret ?? string.Empty)}";
 
+        // HMAC-SHA1 is mandated by the OAuth 1.0a spec (RFC 5849) and by FatSecret's API - not a choice we get to make.
+#pragma warning disable CA5350
         using var hmac = new HMACSHA1(Encoding.UTF8.GetBytes(signingKey));
+#pragma warning restore CA5350
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(baseString));
         return Convert.ToBase64String(hash);
     }

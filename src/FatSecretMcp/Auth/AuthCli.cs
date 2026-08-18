@@ -32,34 +32,34 @@ internal static class AuthCli
         switch (args[0])
         {
             case "request":
-            {
-                var (token, tokenSecret) = await client.GetRequestTokenAsync();
-                Console.WriteLine($"token={token}");
-                Console.WriteLine($"token_secret={tokenSecret}");
-                Console.WriteLine($"authorize_url={FatSecretOAuth1Client.BuildAuthorizeUrl(token)}");
-                break;
-            }
-
-            case "exchange":
-            {
-                var (accessToken, accessTokenSecret) = await client.GetAccessTokenAsync(args[1], args[2], args[3]);
-                Console.WriteLine($"access_token={accessToken}");
-                Console.WriteLine($"access_token_secret={accessTokenSecret}");
-                break;
-            }
-
-            case "call":
-            {
-                var methodParams = new Dictionary<string, string> { ["method"] = args[3], ["format"] = "json" };
-                foreach (var kv in args.Skip(4))
                 {
-                    var parts = kv.Split('=', 2);
-                    methodParams[parts[0]] = parts.Length > 1 ? parts[1] : string.Empty;
+                    var (token, tokenSecret) = await client.GetRequestTokenAsync();
+                    Console.WriteLine($"token={token}");
+                    Console.WriteLine($"token_secret={tokenSecret}");
+                    Console.WriteLine($"authorize_url={FatSecretOAuth1Client.BuildAuthorizeUrl(token)}");
+                    break;
                 }
 
-                Console.WriteLine(await client.CallApiAsync(methodParams, args[1], args[2]));
-                break;
-            }
+            case "exchange":
+                {
+                    var (accessToken, accessTokenSecret) = await client.GetAccessTokenAsync(args[1], args[2], args[3]);
+                    Console.WriteLine($"access_token={accessToken}");
+                    Console.WriteLine($"access_token_secret={accessTokenSecret}");
+                    break;
+                }
+
+            case "call":
+                {
+                    var methodParams = new Dictionary<string, string> { ["method"] = args[3], ["format"] = "json" };
+                    foreach (var kv in args.Skip(4))
+                    {
+                        var parts = kv.Split('=', 2);
+                        methodParams[parts[0]] = parts.Length > 1 ? parts[1] : string.Empty;
+                    }
+
+                    Console.WriteLine(await client.CallApiAsync(methodParams, args[1], args[2]));
+                    break;
+                }
 
             default:
                 Console.Error.WriteLine($"Unknown auth subcommand: {args[0]}");

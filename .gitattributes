@@ -1,0 +1,15 @@
+# Default behavior: if Git thinks a file is text (as opposed to binary), it
+# will normalize line endings to LF in the repository, but convert to your
+# platform's native line endings on checkout.
+* text=auto
+
+# Force LF regardless of platform - matters once this runs in a Linux container.
+*.sh text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files - do not diff/merge/normalize.
+*.png binary
+*.jpg binary
+*.ico binary
