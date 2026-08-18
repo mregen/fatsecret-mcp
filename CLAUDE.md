@@ -8,9 +8,11 @@ A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API
 
 ## Status as of 2026-08-18
 
-- Local git repo initialized at `~/Source/Repos/fatsecret-mcp`, branch `main`, one commit (README + .gitignore only).
-- **Not yet pushed to GitHub.** Decided: repo name `fatsecret-mcp`, owner `mregen`, **public** visibility. Create with `gh repo create mregen/fatsecret-mcp --public --source=. --push` (or equivalent) when ready.
-- No .NET solution/code exists yet — this is pre-scaffold.
+- Pushed to GitHub: [mregen/fatsecret-mcp](https://github.com/mregen/fatsecret-mcp), public, branch `main`.
+- 14 issues filed across 3 milestones (Prototype → Full feature coverage → Harden & containerize) covering the full build-out; see GitHub Issues for the authoritative task list.
+- **Milestone 1 in progress**: issues #1 (scaffold) and #2 (MCP host + smoke test) are done — `FatSecretMcp.slnx` + `src/FatSecretMcp/` (net10.0), `ModelContextProtocol.AspNetCore` 2.2.0 wired up with stateless Streamable HTTP at `/mcp`, verified end to end with a placeholder `echo` tool via raw JSON-RPC.
+- **Auth key finding**: a ~10-year-old FatSecret OAuth 1.0 consumer key/secret was confirmed still live (2026-08-18, signed 2-legged request against `foods.search` succeeded). Decision: keep the original two-flow plan below — this legacy key is earmarked for OAuth 1.0a 3-legged (`premier` scope, issue #6) only; a **new** app registration is still needed for OAuth 2.0 client-credentials (`basic` scope, issue #3). The legacy key/secret is already stored in local `dotnet user-secrets` (`FatSecret:OAuth1:ConsumerKey`/`ConsumerSecret`) — never commit it to the repo.
+- Next action is on the user: register a new FatSecret app for OAuth 2.0 credentials (issue #3), which unblocks #4 and #5.
 
 ## Prior art (researched, not adopted)
 
@@ -48,10 +50,4 @@ Conclusion: worth a look for reference, not worth forking. Building fresh in .NE
 
 ## Next steps (pick up here)
 
-1. Decide exact endpoint/tool scope for v1 (MVP vs fuller build).
-2. Scaffold the .NET solution (`dotnet new` console/web project, add `ModelContextProtocol.AspNetCore`).
-3. Register a FatSecret developer app to get Client ID/Secret (https://platform.fatsecret.com/).
-4. Implement OAuth 2.0 client-credentials flow first (unblocks food/recipe search tools).
-5. Implement OAuth 1.0a 3-legged flow (unblocks diary/weight/exercise tools).
-6. Write the Dockerfile and verify the container runs the MCP server over Streamable HTTP.
-7. Push to GitHub (`mregen/fatsecret-mcp`, public) once there's something worth publishing.
+See GitHub Issues on [mregen/fatsecret-mcp](https://github.com/mregen/fatsecret-mcp/issues) for the full, current task list. Immediate next step: issue #3 — register a new FatSecret developer app for OAuth 2.0 client-credentials (user action, blocks #4 and #5). Containerization (Milestone 3) is deliberately deferred until Milestone 1 (prototype talking to an LLM) is done.
