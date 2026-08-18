@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+    <PackageVersion Include="CryptoHives.Foundation.Security.Cryptography" Version="0.6.79" />
   </ItemGroup>
 
 </Project>

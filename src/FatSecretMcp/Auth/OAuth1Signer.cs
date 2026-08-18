@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-using System.Security.Cryptography;
 using System.Text;
+using CryptoHives.Foundation.Security.Cryptography.Mac;
 
 namespace FatSecretMcp.Auth;
 
@@ -49,10 +49,9 @@ public static class OAuth1Signer
         var signingKey = $"{PercentEncode(consumerSecret)}&{PercentEncode(tokenSecret ?? string.Empty)}";
 
         // HMAC-SHA1 is mandated by the OAuth 1.0a spec (RFC 5849) and by FatSecret's API - not a choice we get to make.
-#pragma warning disable CA5350
-        using var hmac = new HMACSHA1(Encoding.UTF8.GetBytes(signingKey));
-#pragma warning restore CA5350
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(baseString));
+#pragma warning disable CS0618
+        var hash = HmacSha1.Hash(Encoding.UTF8.GetBytes(signingKey), Encoding.UTF8.GetBytes(baseString));
+#pragma warning restore CS0618
         return Convert.ToBase64String(hash);
     }
 
