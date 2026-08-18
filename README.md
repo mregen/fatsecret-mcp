@@ -16,4 +16,4 @@ Early scaffolding. Not yet functional.
 
 ## License
 
-TBD
+MIT — see [LICENSE](LICENSE).

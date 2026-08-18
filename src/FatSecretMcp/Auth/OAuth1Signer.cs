@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 using System.Security.Cryptography;
 using System.Text;
 

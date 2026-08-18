@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 using FatSecretMcp.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
