@@ -1,6 +1,6 @@
 # fatsecret-mcp
 
-A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), hostable as a Docker container.
+A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), hostable as a Docker container or as a dotnet tool.
 
 ## Status
 

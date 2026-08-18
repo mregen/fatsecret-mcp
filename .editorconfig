@@ -16,8 +16,6 @@ charset = utf-8
 # Code files
 [*.{cs,csx,vb,vbx}]
 indent_size = 4
-# utf-8 (no BOM): no legacy VS/.NET Framework tooling dependency on the BOM here,
-# and plain utf-8 is friendlier to Linux-based Docker tooling.
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
