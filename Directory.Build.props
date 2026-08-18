@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="version.props" />
+
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

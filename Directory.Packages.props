@@ -12,6 +12,7 @@
     <PackageVersion Include="NUnit.Analyzers" Version="4.7.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="5.0.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.91" />
   </ItemGroup>
 
 </Project>
