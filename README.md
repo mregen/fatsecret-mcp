@@ -5,6 +5,20 @@
 
 A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), installable as a .NET tool from [nuget.org](https://www.nuget.org/packages/FatSecretMcp). Docker hosting is planned but deliberately deferred - see [Security](#security) below.
 
+## Purpose
+
+FatSecret has years of your food diary, weight, and exercise history sitting behind its own app and website. This project connects that data to an LLM directly, so you can ask questions and log entries in plain language instead of tapping through FatSecret's UI - and, eventually, sync data between FatSecret and other fitness trackers/calorie apps rather than re-entering the same numbers twice.
+
+A couple of examples of what that looks like once the tools are connected (illustrative - your own numbers will differ):
+
+> **You:** How many days this month did I stay below my recommended calorie count?
+>
+> **Claude:** Looking at your food diary for August: you logged food on 18 of the 19 days so far. You stayed under your ~2,300 kcal target on 13 of those days, averaging about 2,180 kcal on target days. The 5 over-target days cluster on weekends, averaging around 2,650 kcal.
+
+> **You:** How many weeks did it take me to lose 5 kilos?
+>
+> **Claude:** Your weight log shows 84.2 kg on March 3rd and 79.1 kg on June 9th - a 5.1 kg loss over about 13.5 weeks, averaging roughly 0.4 kg/week. The rate was fairly steady, with a plateau in late April where weight held for about two weeks.
+
 ## Status
 
 Functional prototype. Food diary, weight, and exercise tools work end to end against the real FatSecret API via OAuth 1.0a. Barcode lookup and autocomplete are implemented but not yet usable - they need a FatSecret app registered for OAuth 2.0 (see [issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)). Food/recipe search isn't implemented yet ([issue #5](https://github.com/mregen/fatsecret-mcp/issues/5)). Not yet containerized - see [open issues](https://github.com/mregen/fatsecret-mcp/issues) for the current roadmap.
