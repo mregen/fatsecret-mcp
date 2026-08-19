@@ -1,5 +1,8 @@
 # fatsecret-mcp
 
+[![Build](https://img.shields.io/github/actions/workflow/status/mregen/fatsecret-mcp/build.yml?branch=main&label=build)](https://github.com/mregen/fatsecret-mcp/actions/workflows/build.yml)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/FatSecretMcp?label=downloads)](https://www.nuget.org/packages/FatSecretMcp)
+
 A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), installable as a .NET tool from [nuget.org](https://www.nuget.org/packages/FatSecretMcp). Docker hosting is planned but deliberately deferred - see [Security](#security) below.
 
 ## Status
