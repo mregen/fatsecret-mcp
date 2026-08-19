@@ -136,9 +136,11 @@ on nuget.org (**username menu → Trusted Publishing → Add policy**):
 | Workflow File | `build.yml` |
 | Environment | `nuget-publish` |
 
-The `publish` job in the workflow also needs the real value filled in for `NuGet/login`'s
-`user:` input (your nuget.org profile name, not email) - currently a `TODO_YOUR_NUGET_ORG_USERNAME`
-placeholder.
+The `publish` job passes `${{ github.repository_owner }}` as `NuGet/login`'s `user:` input,
+rather than a hardcoded name - it relies on your nuget.org profile name matching your GitHub
+username (true for `mregen`), so a fork of this repo publishes under *its own* owner's identity
+by default, without editing the workflow. If your nuget.org username differs from your GitHub
+username, override `user:` with a literal value (or a repository variable) instead.
 
 After a successful push, the same job also creates a GitHub release (`gh release create`,
 tagged `v<version>`) with the `.nupkg`/`.snupkg` attached and notes auto-generated from merged

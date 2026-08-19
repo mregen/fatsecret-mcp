@@ -74,7 +74,11 @@ jobs:
         uses: NuGet/login@v1
         id: login
         with:
-          user: TODO_YOUR_NUGET_ORG_USERNAME # your nuget.org profile name (not email) - see docs/DEVELOPER.md's Publishing section.
+          # Defaults to the GitHub repo owner as the nuget.org profile name, so a fork publishes
+          # under its own identity rather than this repo's - see docs/DEVELOPER.md's Publishing
+          # section for the assumption this relies on (GitHub username == nuget.org username) and
+          # what to do if that's not true for you.
+          user: ${{ github.repository_owner }}
 
       - name: Push to NuGet.org
         run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
