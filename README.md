@@ -131,6 +131,93 @@ For Claude Code, point it at the installed command instead of `dotnet run`:
 claude mcp add fatsecret-mcp -- fatsecret-mcp
 ```
 
+## Configure Claude Desktop, ChatGPT, or LM Studio
+
+Do steps 1-2 above (credentials + the one-time OAuth1 browser flow) first - that part is always
+interactive and can't happen from inside a client's spawned process.
+
+**Can these clients start `fatsecret-mcp` automatically?** Claude Desktop and LM Studio: yes -
+both spawn a local stdio process directly from their own config, no server to keep running
+yourself. **ChatGPT: no** - it only connects to a reachable HTTPS URL, not a local command. See
+its section below.
+
+### Find the installed binary's absolute path
+
+GUI-launched apps often don't inherit the PATH your terminal has, so the bare `fatsecret-mcp`
+command name may not resolve even though it works in a shell. Use the absolute path instead:
+
+- macOS/Linux: `~/.dotnet/tools/fatsecret-mcp`
+- Windows: `%USERPROFILE%\.dotnet\tools\fatsecret-mcp.exe`
+
+### Credentials as environment variables
+
+Client configs pass credentials via an `env` object rather than `dotnet user-secrets` (which is
+tied to this project's directory). .NET's config system maps environment variables using `__`
+(double underscore) in place of the `:` used elsewhere in this README:
+
+| user-secrets key | environment variable |
+|---|---|
+| `FatSecret:OAuth1:ConsumerKey` | `FatSecret__OAuth1__ConsumerKey` |
+| `FatSecret:OAuth1:ConsumerSecret` | `FatSecret__OAuth1__ConsumerSecret` |
+| `FatSecret:OAuth1:AccessToken` | `FatSecret__OAuth1__AccessToken` |
+| `FatSecret:OAuth1:AccessTokenSecret` | `FatSecret__OAuth1__AccessTokenSecret` |
+| `FatSecret:OAuth2:ClientId` (optional) | `FatSecret__OAuth2__ClientId` |
+| `FatSecret:OAuth2:ClientSecret` (optional) | `FatSecret__OAuth2__ClientSecret` |
+
+No code change needed for this - both hosts read environment variables automatically. If you
+already ran the `dotnet user-secrets set` commands above on the same machine, `fatsecret-mcp`
+picks those up regardless of how it's launched, and you can skip setting `env` entirely.
+
+### Claude Desktop
+
+Edit `claude_desktop_config.json` (macOS:
+`~/Library/Application Support/Claude/claude_desktop_config.json`; Windows:
+`%APPDATA%\Claude\claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "fatsecret-mcp": {
+      "command": "/Users/you/.dotnet/tools/fatsecret-mcp",
+      "args": [],
+      "env": {
+        "FatSecret__OAuth1__ConsumerKey": "<your consumer key>",
+        "FatSecret__OAuth1__ConsumerSecret": "<your consumer secret>",
+        "FatSecret__OAuth1__AccessToken": "<your access token>",
+        "FatSecret__OAuth1__AccessTokenSecret": "<your access token secret>"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop to pick it up.
+
+### LM Studio
+
+LM Studio's MCP config (`mcp.json`) follows the same `command`/`args`/`env` shape as Claude
+Desktop above. Its documented path is `~/.lmstudio/mcp.json` (macOS/Linux) /
+`%USERPROFILE%\.lmstudio\mcp.json` (Windows), but there are user reports of the real path
+differing by version/OS - rather than guessing, use the in-app editor: **Program tab → Install
+→ Edit `mcp.json`**, which opens whichever file is actually authoritative for your install, and
+paste in the same JSON shown for Claude Desktop above (just the inner object works too, since
+LM Studio also uses an `mcpServers` map).
+
+### ChatGPT
+
+ChatGPT's connector model (Settings → Apps/Connectors → Developer mode → Advanced settings) only
+accepts an HTTPS URL - it does not spawn local commands, so there's no direct equivalent to the
+`command`/`args`/`env` config above. Two ways to actually reach it from ChatGPT, neither of them
+a quick config edit:
+
+- Run `fatsecret-mcp --http` and expose it over HTTPS - but per [Security](#security), that
+  means anyone who can reach the URL gets full access to your FatSecret data, since there's no
+  auth layer yet. Not recommended until that's built.
+- OpenAI's [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)
+  lets ChatGPT reach a local/private MCP server (stdio or HTTP) without exposing a public port,
+  via a separate `tunnel-client` process you run alongside it. This project hasn't set that up
+  or verified it works here - treat it as a starting point to investigate, not tested instructions.
+
 ## Publishing
 
 `.github/workflows/build.yml` packs the tool (`.nupkg` + `.snupkg`) on every push to `main` and
