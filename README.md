@@ -221,12 +221,31 @@ a quick config edit:
 ## Publishing
 
 `.github/workflows/build.yml` packs the tool (`.nupkg` + `.snupkg`) on every push to `main` and
-uploads it as a workflow artifact - so a build is always inspectable, even though publishing to
-nuget.org is currently **disabled** (`if: false` on the push step). This isn't a security
-gate (the package contains no credentials - see [Security](#security) above for the actual
-concern) so much as a "not polished enough yet" one: OAuth 2.0 is still unverified and food/recipe
-search isn't implemented. To enable publishing once that's no longer true: add a `NUGET_API_KEY`
-repository secret (from a nuget.org API key), then remove the `if: false` line.
+uploads it as a workflow artifact - so a build is always inspectable. Publishing to nuget.org is
+a **separate, manual-only job** that never runs on a normal push/PR: it only exists on
+`workflow_dispatch` (Actions tab → this workflow → **Run workflow**), gated behind a `publish`
+checkbox input that **defaults to false**, and it `needs: build` so it can't run unless the
+build+test job already succeeded.
+
+Publishing uses nuget.org's [Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)
+(OIDC) instead of a stored API key - no long-lived secret in this repo at all. One-time setup,
+on nuget.org (**username menu → Trusted Publishing → Add policy**):
+
+| Field | Value |
+|---|---|
+| Repository Owner | `mregen` |
+| Repository | `fatsecret-mcp` |
+| Workflow File | `build.yml` |
+| Environment | `nuget-publish` |
+
+The `publish` job in the workflow also needs the real value filled in for `NuGet/login`'s
+`user:` input (your nuget.org profile name, not email) - currently a `TODO_YOUR_NUGET_ORG_USERNAME`
+placeholder.
+
+This isn't primarily a security gate (the package contains no credentials either way - see
+[Security](#security) above for the actual concern) so much as a "not polished enough yet" one:
+OAuth 2.0 is still unverified and food/recipe search isn't implemented. Trigger a manual publish
+run once that's no longer true.
 
 ## Plan / architecture
 

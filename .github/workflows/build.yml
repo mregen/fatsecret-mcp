@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the NuGet package to nuget.org after a successful build'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -40,7 +46,28 @@ jobs:
           name: nuget-package
           path: ./nupkg/*.*nupkg
 
+  publish:
+    # Only reachable via a manual "Run workflow" with publish=true - never on push/PR - and only
+    # once `build` (which includes Test) has succeeded, since this job `needs` it.
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.publish == true
+    runs-on: ubuntu-latest
+    environment: nuget-publish # must match the "Environment" field on nuget.org's Trusted Publishing policy for this repo.
+    permissions:
+      id-token: write # required so GitHub can issue the OIDC token NuGet/login exchanges for a short-lived API key.
+
+    steps:
+      - name: Download NuGet package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          path: ./nupkg
+
+      - name: NuGet login (OIDC -> temporary API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: TODO_YOUR_NUGET_ORG_USERNAME # your nuget.org profile name (not email) - see README's Publishing section.
+
       - name: Push to NuGet.org
-        if: false # disabled until ready to publish - see docs/multi-tenant-cloud-service.md and README's Publishing section.
-                  # to enable: add a NUGET_API_KEY repo secret, then remove this `if: false`.
-        run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
