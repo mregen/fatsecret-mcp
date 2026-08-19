@@ -5,6 +5,8 @@
 
 A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), installable as a .NET tool from [nuget.org](https://www.nuget.org/packages/FatSecretMcp). Docker hosting is planned but deliberately deferred - see [Security](#security) below.
 
+**This is an independent, community-built project - not an official FatSecret product.** It is not affiliated with, endorsed by, or supported by FatSecret. It works against the public [FatSecret Platform API](https://platform.fatsecret.com/docs/guides) using your own developer credentials, registered separately at platform.fatsecret.com. "FatSecret" is a trademark of its respective owner, used here only to describe API compatibility.
+
 ## Purpose
 
 FatSecret has years of your food diary, weight, and exercise history sitting behind its own app and website. This project connects that data to an LLM directly, so you can ask questions and log entries in plain language instead of tapping through FatSecret's UI - and, eventually, sync data between FatSecret and other fitness trackers/calorie apps rather than re-entering the same numbers twice.
