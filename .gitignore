@@ -12,3 +12,4 @@ nupkg/
 *.env
 .env.*
 appsettings.*.local.json
+mcp.json
