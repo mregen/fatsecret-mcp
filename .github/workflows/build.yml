@@ -85,9 +85,13 @@ jobs:
           user: ${{ github.repository_owner }}
 
       - name: Push to NuGet.org
+        id: push
         run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Create GitHub release
+        # steps.push.outcome (not just success()) so this stays safe even if the push step ever
+        # gains continue-on-error: true - a failed NuGet push must never produce a release.
+        if: success() && steps.push.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
