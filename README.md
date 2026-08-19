@@ -1,10 +1,20 @@
 # fatsecret-mcp
 
-A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), hostable as a Docker container or as a dotnet tool.
+A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), installable as a .NET tool. Docker hosting is planned but deliberately deferred - see [Security](#security) below.
 
 ## Status
 
 Functional prototype. Food diary, weight, and exercise tools work end to end against the real FatSecret API via OAuth 1.0a. Barcode lookup and autocomplete are implemented but not yet usable - they need a FatSecret app registered for OAuth 2.0 (see [issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)). Food/recipe search isn't implemented yet ([issue #5](https://github.com/mregen/fatsecret-mcp/issues/5)). Not yet containerized - see [open issues](https://github.com/mregen/fatsecret-mcp/issues) for the current roadmap.
+
+## Security
+
+The HTTP transport has **no authentication or authorization layer yet** - anyone who can reach
+the endpoint can call any tool, including the ones that read/write your real FatSecret data.
+This is fine for local use (stdio, or `--http` left on `localhost`), but it means **this must
+not be exposed publicly** - no public Docker hosting, no binding to `0.0.0.0` on an open network
+- until that gap is closed. See [`docs/multi-tenant-cloud-service.md`](docs/multi-tenant-cloud-service.md)
+for the auth work that's needed first (items #3/#4 there) and the reasoning behind deferring
+containerized/cloud hosting.
 
 ## Available tools
 
@@ -121,14 +131,24 @@ For Claude Code, point it at the installed command instead of `dotnet run`:
 claude mcp add fatsecret-mcp -- fatsecret-mcp
 ```
 
+## Publishing
+
+`.github/workflows/build.yml` packs the tool (`.nupkg` + `.snupkg`) on every push to `main` and
+uploads it as a workflow artifact - so a build is always inspectable, even though publishing to
+nuget.org is currently **disabled** (`if: false` on the push step). This isn't a security
+gate (the package contains no credentials - see [Security](#security) above for the actual
+concern) so much as a "not polished enough yet" one: OAuth 2.0 is still unverified and food/recipe
+search isn't implemented. To enable publishing once that's no longer true: add a `NUGET_API_KEY`
+repository secret (from a nuget.org API key), then remove the `if: false` line.
+
 ## Plan / architecture
 
 - Built on the official [ModelContextProtocol C# SDK](https://github.com/modelcontextprotocol/csharp-sdk) (`ModelContextProtocol.AspNetCore`). Two transports, chosen at startup by branching on `args` before the host is built: stdio (default, `Host.CreateApplicationBuilder` + `.WithStdioServerTransport()`) or HTTP (`--http`, `WebApplication.CreateBuilder` + stateless Streamable HTTP via `MapMcp`) - the SDK doesn't support registering both on one builder, so `Program.cs` picks one.
-- Also packable as a .NET global tool (`PackAsTool`, see above) as an alternative to (not-yet-built) Docker.
+- Also packable as a .NET global tool (`PackAsTool`, see above). Docker hosting is intentionally not built yet - see [Security](#security).
 - Auth:
   - OAuth 1.0a 3-legged flow for the `premier` scope (user food diary, weight, exercise entries) - hand-rolled HMAC-SHA1 signing (`src/FatSecretMcp/Auth/`), no .NET or FatSecret SDK support for this exists.
   - OAuth 2.0 client-credentials flow for `basic`/`barcode` scope (food/recipe search, autocomplete, barcode lookup).
-- Target: `net10.0`, single project for now, no container yet.
+- Target: `net10.0`, single project for now.
 
 ## License
 

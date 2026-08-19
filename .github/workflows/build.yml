@@ -30,3 +30,17 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --configuration Release
+
+      - name: Pack
+        run: dotnet pack src/FatSecretMcp/FatSecretMcp.csproj --no-build --configuration Release -o ./nupkg
+
+      - name: Upload NuGet package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ./nupkg/*.*nupkg
+
+      - name: Push to NuGet.org
+        if: false # disabled until ready to publish - see docs/multi-tenant-cloud-service.md and README's Publishing section.
+                  # to enable: add a NUGET_API_KEY repo secret, then remove this `if: false`.
+        run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
