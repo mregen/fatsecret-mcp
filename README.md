@@ -19,9 +19,27 @@ A couple of examples of what that looks like once the tools are connected (illus
 >
 > **Claude:** Your weight log shows 84.2 kg on March 3rd and 79.1 kg on June 9th - a 5.1 kg loss over about 13.5 weeks, averaging roughly 0.4 kg/week. The rate was fairly steady, with a plateau in late April where weight held for about two weeks.
 
+## Requirements
+
+- **.NET 8 or .NET 10 runtime** - to install and run the tool (see [Install](#install) below)
+- **An MCP-capable LLM client** - Claude Code, Claude Desktop, ChatGPT, or LM Studio (see [Configure Claude Code, Claude Desktop, ChatGPT, or LM Studio](#configure-claude-code-claude-desktop-chatgpt-or-lm-studio) below)
+- **A FatSecret account and API app** - your existing FatSecret account, plus a free developer app registered at https://platform.fatsecret.com/ for API credentials
+
 ## Status
 
-Functional prototype. Food diary, weight, and exercise tools work end to end against the real FatSecret API via OAuth 1.0a. Barcode lookup and autocomplete are implemented but not yet usable - they need a FatSecret app registered for OAuth 2.0 (see [issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)). Food/recipe search isn't implemented yet ([issue #5](https://github.com/mregen/fatsecret-mcp/issues/5)). Not yet containerized - see [open issues](https://github.com/mregen/fatsecret-mcp/issues) for the current roadmap.
+This is a working prototype, already used day to day for real tracking.
+
+| Feature | Status |
+|---|---|
+| Food diary (read, add, edit, delete) | ✅ Working |
+| Weight log | ✅ Working |
+| Exercise log | ✅ Working |
+| Barcode lookup | 🔜 Built, not switched on yet - needs one more one-time setup step ([issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)) |
+| Autocomplete-as-you-type | 🔜 Built, not switched on yet - same setup step ([issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)) |
+| Search foods/recipes by name | ⏳ Not built yet - same setup step ([issue #5](https://github.com/mregen/fatsecret-mcp/issues/5)) |
+| Run as a shared, always-on server | ⏳ Not ready yet |
+
+See [open issues](https://github.com/mregen/fatsecret-mcp/issues) for the current roadmap.
 
 ## Security
 
