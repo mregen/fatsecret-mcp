@@ -27,7 +27,8 @@ for the auth work that's needed first and the reasoning behind deferring contain
 
 ## Install
 
-Requires the .NET 10 SDK.
+Requires the .NET 8 or .NET 10 SDK - the package multi-targets both, so `dotnet tool install`
+picks whichever one matches your installed SDK automatically.
 
 ```bash
 dotnet tool install --global FatSecretMcp

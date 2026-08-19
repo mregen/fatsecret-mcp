@@ -11,7 +11,7 @@ that.
 - Auth:
   - OAuth 1.0a 3-legged flow for the `premier` scope (user food diary, weight, exercise entries) - hand-rolled HMAC-SHA1 signing (`src/FatSecretMcp/Auth/`), no .NET or FatSecret SDK support for this exists.
   - OAuth 2.0 client-credentials flow for `basic`/`barcode` scope (food/recipe search, autocomplete, barcode lookup).
-- Target: `net10.0`, single project for now.
+- Target: multi-targets `net8.0;net10.0` (net8.0 is the still-widely-installed LTS through ~Nov 2026; net10.0 is the current LTS through ~Nov 2028) - single project for now, no RID-specific builds.
 
 See also [`multi-tenant-cloud-service.md`](multi-tenant-cloud-service.md) for the (not yet
 started) sketch of what running this as a service for many end users would take.
@@ -23,7 +23,7 @@ working against a clone of this repo instead (e.g. to test unreleased changes).
 
 ### Prerequisites
 
-- .NET 10 SDK
+- .NET 8 or .NET 10 SDK (the project multi-targets both - either builds and runs it)
 - A FatSecret Platform API app - register one at https://platform.fatsecret.com/ if you don't have one
 
 ### 1. Configure credentials
