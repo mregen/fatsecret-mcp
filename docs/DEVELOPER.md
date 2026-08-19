@@ -40,6 +40,12 @@ The `publish` job in the workflow also needs the real value filled in for `NuGet
 `user:` input (your nuget.org profile name, not email) - currently a `TODO_YOUR_NUGET_ORG_USERNAME`
 placeholder.
 
+After a successful push, the same job also creates a GitHub release (`gh release create`,
+tagged `v<version>`) with the `.nupkg`/`.snupkg` attached and notes auto-generated from merged
+PRs/commits since the last tag. The version is the one NBGV computed during `Pack`, extracted
+from the packed filename (`FatSecretMcp.<version>.nupkg`) and passed between jobs via a job
+`output`.
+
 This isn't primarily a security gate (the package contains no credentials either way - see the
 README's [Security](../README.md#security) section for the actual concern) so much as a "not
 polished enough yet" one: OAuth 2.0 is still unverified and food/recipe search isn't
