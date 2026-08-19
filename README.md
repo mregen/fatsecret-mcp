@@ -1,6 +1,6 @@
 # fatsecret-mcp
 
-A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), installable as a .NET tool. Docker hosting is planned but deliberately deferred - see [Security](#security) below.
+A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API](https://platform.fatsecret.com/docs/guides), installable as a .NET tool from [nuget.org](https://www.nuget.org/packages/FatSecretMcp). Docker hosting is planned but deliberately deferred - see [Security](#security) below.
 
 ## Status
 
@@ -12,9 +12,8 @@ The HTTP transport has **no authentication or authorization layer yet** - anyone
 the endpoint can call any tool, including the ones that read/write your real FatSecret data.
 This is fine for local use (stdio, or `--http` left on `localhost`), but it means **this must
 not be exposed publicly** - no public Docker hosting, no binding to `0.0.0.0` on an open network
-- until that gap is closed. See [`docs/multi-tenant-cloud-service.md`](docs/multi-tenant-cloud-service.md)
-for the auth work that's needed first (items #3/#4 there) and the reasoning behind deferring
-containerized/cloud hosting.
+- until that gap is closed. See [`docs/multi-tenant-cloud-service.md`](https://github.com/mregen/fatsecret-mcp/blob/main/docs/multi-tenant-cloud-service.md)
+for the auth work that's needed first and the reasoning behind deferring containerized/cloud hosting.
 
 ## Available tools
 
@@ -26,120 +25,82 @@ containerized/cloud hosting.
 | `get_exercise_entries`, `search_exercises`, `shift_exercise_time` | OAuth 1.0a | FatSecret models a day as a full 24-hour allocation across activities, not independent log entries - see the tool descriptions for how this works |
 | `find_food_by_barcode`, `autocomplete_food` | OAuth 2.0 (not yet configured) | Implemented but unverified against the live API pending a real OAuth 2.0 app |
 
-## Running locally
+## Install
 
-### Prerequisites
-
-- .NET 10 SDK
-- A FatSecret Platform API app - register one at https://platform.fatsecret.com/ if you don't have one
-
-### 1. Configure credentials
-
-Credentials are read from [.NET user-secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets), run from `src/FatSecretMcp/` - never commit them to the repo.
-
-For OAuth 1.0a (food diary, weight, exercise):
+Requires the .NET 10 SDK.
 
 ```bash
-cd src/FatSecretMcp
-dotnet user-secrets set "FatSecret:OAuth1:ConsumerKey" "<your consumer key>"
-dotnet user-secrets set "FatSecret:OAuth1:ConsumerSecret" "<your consumer secret>"
+dotnet tool install --global FatSecretMcp
 ```
 
-For OAuth 2.0 (barcode lookup, autocomplete), once you have an app registered for it:
+This installs a `fatsecret-mcp` command. Confirm it's on your PATH with `fatsecret-mcp --version`
+(the .NET tools directory, `~/.dotnet/tools`, needs to be there - the installer usually adds it
+automatically).
+
+You'll also need a FatSecret Platform API app - register one at https://platform.fatsecret.com/
+if you don't have one.
+
+## Configure credentials
+
+Credentials are passed as environment variables - `FatSecret:OAuth1:ConsumerKey` etc. become
+`FatSecret__OAuth1__ConsumerKey` (double underscore in place of `:`), which is how .NET's config
+system maps env vars automatically. No code or config file needed.
+
+| Setting | Environment variable |
+|---|---|
+| OAuth 1.0a consumer key | `FatSecret__OAuth1__ConsumerKey` |
+| OAuth 1.0a consumer secret | `FatSecret__OAuth1__ConsumerSecret` |
+| OAuth 1.0a access token | `FatSecret__OAuth1__AccessToken` |
+| OAuth 1.0a access token secret | `FatSecret__OAuth1__AccessTokenSecret` |
+| OAuth 2.0 client id (optional) | `FatSecret__OAuth2__ClientId` |
+| OAuth 2.0 client secret (optional) | `FatSecret__OAuth2__ClientSecret` |
+
+The access token/secret come from a one-time authorization step, next.
+
+### One-time OAuth 1.0a authorization
+
+This grants the server access to your own FatSecret account. It's interactive - you approve
+access in a browser - but doesn't need a callback server, since FatSecret shows a PIN you copy
+back in. Do this once, from a terminal, with the consumer key/secret set:
 
 ```bash
-dotnet user-secrets set "FatSecret:OAuth2:ClientId" "<your client id>"
-dotnet user-secrets set "FatSecret:OAuth2:ClientSecret" "<your client secret>"
+export FatSecret__OAuth1__ConsumerKey="<your consumer key>"
+export FatSecret__OAuth1__ConsumerSecret="<your consumer secret>"
+fatsecret-mcp auth request
 ```
 
-### 2. Complete the OAuth 1.0a three-legged flow (one time)
-
-This grants the server access to your own FatSecret account. It's interactive - you approve access in a browser - but doesn't need a callback server, since FatSecret shows a PIN you copy back in.
+This prints a `token`, `token_secret`, and an `authorize_url`. Open the URL, log in, approve the
+app, and copy the PIN it shows you. Then:
 
 ```bash
-cd src/FatSecretMcp
-dotnet run -- auth request
+fatsecret-mcp auth exchange <token> <token_secret> <pin>
 ```
 
-This prints a `token`, `token_secret`, and an `authorize_url`. Open the URL, log in, approve the app, and copy the PIN it shows you. Then:
+This prints an `access_token` and `access_token_secret` - it doesn't expire on its own. Add both,
+plus the consumer key/secret, as environment variables wherever you run `fatsecret-mcp` from -
+your shell profile for standalone use, or your MCP client's config for the `env` block shown
+below.
 
-```bash
-dotnet run -- auth exchange <token> <token_secret> <pin>
-```
-
-This prints an `access_token` and `access_token_secret`. Store them:
-
-```bash
-dotnet user-secrets set "FatSecret:OAuth1:AccessToken" "<access_token>"
-dotnet user-secrets set "FatSecret:OAuth1:AccessTokenSecret" "<access_token_secret>"
-```
-
-You only need to do this once - the access token doesn't expire on its own.
-
-### 3. Run the server
+## Run it
 
 The server supports two transports, chosen at startup - **stdio by default**, or HTTP via a flag:
 
 ```bash
-cd src/FatSecretMcp
-
-# stdio (default) - for MCP clients that spawn the process directly
-dotnet run
-
-# HTTP - a long-running server on a port, using ASP.NET Core's standard --urls flag
-dotnet run -- --http --urls http://localhost:5102
+fatsecret-mcp                                       # stdio - for MCP clients that spawn the process directly
+fatsecret-mcp --http --urls http://localhost:5102    # HTTP - a long-running server on a port
 ```
 
 In HTTP mode the MCP endpoint is at `<url>/mcp` (Streamable HTTP), e.g. `http://localhost:5102/mcp`.
 
-### 4. Point an MCP client at it
+## Configure Claude Code, Claude Desktop, ChatGPT, or LM Studio
 
-For Claude Code, stdio (default transport):
+Do the credentials + one-time OAuth1 steps above first - that part is always interactive and
+can't happen from inside a client's spawned process.
 
-```bash
-claude mcp add fatsecret-mcp -- dotnet run --project src/FatSecretMcp
-```
-
-Or HTTP, with the server already running from step 3:
-
-```bash
-claude mcp add --transport http fatsecret-local-dev http://localhost:5102/mcp
-```
-
-Then restart or reconnect your Claude Code session - new MCP registrations aren't picked up mid-session - and the tools above become available.
-
-## Install as a .NET tool
-
-Instead of running from source, package the server as an installable global tool:
-
-```bash
-dotnet pack src/FatSecretMcp/FatSecretMcp.csproj -c Release -o ./nupkg
-dotnet tool install --global --add-source ./nupkg FatSecretMcp
-```
-
-This installs a `fatsecret-mcp` command (credentials/auth setup above still apply - it reads the same user-secrets). Run it the same way as `dotnet run`:
-
-```bash
-fatsecret-mcp                                       # stdio (default)
-fatsecret-mcp --http --urls http://localhost:5102    # HTTP
-fatsecret-mcp auth request                           # one-time OAuth1 flow
-```
-
-For Claude Code, point it at the installed command instead of `dotnet run`:
-
-```bash
-claude mcp add fatsecret-mcp -- fatsecret-mcp
-```
-
-## Configure Claude Desktop, ChatGPT, or LM Studio
-
-Do steps 1-2 above (credentials + the one-time OAuth1 browser flow) first - that part is always
-interactive and can't happen from inside a client's spawned process.
-
-**Can these clients start `fatsecret-mcp` automatically?** Claude Desktop and LM Studio: yes -
-both spawn a local stdio process directly from their own config, no server to keep running
-yourself. **ChatGPT: no** - it only connects to a reachable HTTPS URL, not a local command. See
-its section below.
+**Can these clients start `fatsecret-mcp` automatically?** Claude Code, Claude Desktop, and LM
+Studio: yes - all spawn a local stdio process directly from their own config, no server to keep
+running yourself. **ChatGPT: no** - it only connects to a reachable HTTPS URL, not a local
+command. See its section below.
 
 ### Find the installed binary's absolute path
 
@@ -149,24 +110,14 @@ command name may not resolve even though it works in a shell. Use the absolute p
 - macOS/Linux: `~/.dotnet/tools/fatsecret-mcp`
 - Windows: `%USERPROFILE%\.dotnet\tools\fatsecret-mcp.exe`
 
-### Credentials as environment variables
+### Claude Code
 
-Client configs pass credentials via an `env` object rather than `dotnet user-secrets` (which is
-tied to this project's directory). .NET's config system maps environment variables using `__`
-(double underscore) in place of the `:` used elsewhere in this README:
+```bash
+claude mcp add fatsecret-mcp -- ~/.dotnet/tools/fatsecret-mcp
+```
 
-| user-secrets key | environment variable |
-|---|---|
-| `FatSecret:OAuth1:ConsumerKey` | `FatSecret__OAuth1__ConsumerKey` |
-| `FatSecret:OAuth1:ConsumerSecret` | `FatSecret__OAuth1__ConsumerSecret` |
-| `FatSecret:OAuth1:AccessToken` | `FatSecret__OAuth1__AccessToken` |
-| `FatSecret:OAuth1:AccessTokenSecret` | `FatSecret__OAuth1__AccessTokenSecret` |
-| `FatSecret:OAuth2:ClientId` (optional) | `FatSecret__OAuth2__ClientId` |
-| `FatSecret:OAuth2:ClientSecret` (optional) | `FatSecret__OAuth2__ClientSecret` |
-
-No code change needed for this - both hosts read environment variables automatically. If you
-already ran the `dotnet user-secrets set` commands above on the same machine, `fatsecret-mcp`
-picks those up regardless of how it's launched, and you can skip setting `env` entirely.
+Restart or reconnect your Claude Code session - new MCP registrations aren't picked up
+mid-session.
 
 ### Claude Desktop
 
@@ -218,11 +169,11 @@ a quick config edit:
   via a separate `tunnel-client` process you run alongside it. This project hasn't set that up
   or verified it works here - treat it as a starting point to investigate, not tested instructions.
 
-## Contributing / developing
+## Building from source / contributing
 
-Building from source, architecture notes, and how NuGet publishing works are in
-[`docs/DEVELOPER.md`](docs/DEVELOPER.md) - none of that is needed just to run the tool.
+Not needed just to use the tool - see [`docs/DEVELOPER.md`](https://github.com/mregen/fatsecret-mcp/blob/main/docs/DEVELOPER.md)
+in the repo for running from a clone, architecture notes, and how NuGet publishing works.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](https://github.com/mregen/fatsecret-mcp/blob/main/LICENSE).
