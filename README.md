@@ -24,7 +24,7 @@ A couple of examples of what that looks like once the tools are connected (illus
 ## Requirements
 
 - **.NET 8 or .NET 10 runtime** - to install and run the tool (see [Install](#install) below)
-- **An MCP-capable LLM client** - Claude Code, Claude Desktop, ChatGPT, or LM Studio (see [Configure Claude Code, Claude Desktop, ChatGPT, or LM Studio](#configure-claude-code-claude-desktop-chatgpt-or-lm-studio) below)
+- **An MCP-capable LLM client** - Claude Code, Claude Desktop, ChatGPT, or LM Studio (see [Configure Claude Code, Claude Desktop, or LM Studio](#configure-claude-code-claude-desktop-chatgpt-or-lm-studio) below)
 - **A FatSecret account and API app** - your existing FatSecret account, plus a free developer app registered at https://platform.fatsecret.com/ for API credentials
 
 ## Status
@@ -130,15 +130,15 @@ fatsecret-mcp --http --urls http://localhost:5102    # HTTP - a long-running ser
 
 In HTTP mode the MCP endpoint is at `<url>/mcp` (Streamable HTTP), e.g. `http://localhost:5102/mcp`.
 
-## Configure Claude Code, Claude Desktop, ChatGPT, or LM Studio
+## Configure Claude Code, Claude Desktop, or LM Studio
 
 Do the credentials + one-time OAuth1 steps above first - that part is always interactive and
 can't happen from inside a client's spawned process.
 
-**Can these clients start `fatsecret-mcp` automatically?** Claude Code, Claude Desktop, and LM
+**Can these clients start `fatsecret-mcp` automatically?** 
+Claude Code, Claude Desktop, and LM
 Studio: yes - all spawn a local stdio process directly from their own config, no server to keep
-running yourself. **ChatGPT: no** - it only connects to a reachable HTTPS URL, not a local
-command. See its section below.
+running yourself.
 
 ### Find the installed binary's absolute path
 
@@ -174,6 +174,8 @@ Edit `claude_desktop_config.json` (macOS:
         "FatSecret__OAuth1__ConsumerSecret": "<your consumer secret>",
         "FatSecret__OAuth1__AccessToken": "<your access token>",
         "FatSecret__OAuth1__AccessTokenSecret": "<your access token secret>"
+        "FatSecret__OAuth2__ClientId": "<your client id>",
+        "FatSecret__OAuth2__ClientSecret": "<your client secret>"
       }
     }
   }
@@ -191,21 +193,6 @@ differing by version/OS - rather than guessing, use the in-app editor: **Program
 → Edit `mcp.json`**, which opens whichever file is actually authoritative for your install, and
 paste in the same JSON shown for Claude Desktop above (just the inner object works too, since
 LM Studio also uses an `mcpServers` map).
-
-### ChatGPT
-
-ChatGPT's connector model (Settings → Apps/Connectors → Developer mode → Advanced settings) only
-accepts an HTTPS URL - it does not spawn local commands, so there's no direct equivalent to the
-`command`/`args`/`env` config above. Two ways to actually reach it from ChatGPT, neither of them
-a quick config edit:
-
-- Run `fatsecret-mcp --http` and expose it over HTTPS - but per [Security](#security), that
-  means anyone who can reach the URL gets full access to your FatSecret data, since there's no
-  auth layer yet. Not recommended until that's built.
-- OpenAI's [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels)
-  lets ChatGPT reach a local/private MCP server (stdio or HTTP) without exposing a public port,
-  via a separate `tunnel-client` process you run alongside it. This project hasn't set that up
-  or verified it works here - treat it as a starting point to investigate, not tested instructions.
 
 ## Building from source / contributing
 
