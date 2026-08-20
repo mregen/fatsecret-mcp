@@ -8,6 +8,13 @@ A .NET-based Model Context Protocol (MCP) server for the [FatSecret Platform API
 The developer has used FatSecret for calorie/nutrition tracking for 10+ years and wants LLM to be able to query and update their FatSecret data directly.
 In the end, LLM should be able to sync data between various Fitness trackers and calory tracking services.
 
+## Update 2026-08-20
+
+- **Issue #3 fully resolved**: a new FatSecret app was registered and OAuth 2.0 client-credentials confirmed working end to end for the `basic` scope — token acquisition (`POST /connect/token`, Basic auth, `grant_type=client_credentials`) and a real `foods.search` call both succeed. Two separate external gates were found and closed along the way: an IP whitelist requirement (FatSecret error 21, `Invalid IP address detected`) and, initially, an `invalid_scope` response — both now clear for `basic`.
+- **`barcode`/`premier` scopes still not granted** on the app registration — `find_food_by_barcode` and `autocomplete_food` still return `invalid_scope` at the token endpoint. This is a FatSecret-side app setting, not a code issue; tracked as a known gap, not reopening #3 for it.
+- **New tool: `search_foods`** (`FoodLookupTools.SearchFoods`, `foods.search`, `basic` scope) — closes the food-search portion of issue #5. Takes `expression`, optional `page_number`, optional `max_results`. Verified live against the real API (`goat cheese` returned real results; German "Ziegenkäse" returned zero — FatSecret's basic database doesn't index that term, not a bug).
+- Docs updated to match: README status/tool tables, `docs/DEVELOPER.md` architecture + user-secrets + publish-gate sections.
+
 ## Status as of 2026-08-19
 
 - Pushed to GitHub: [mregen/fatsecret-mcp](https://github.com/mregen/fatsecret-mcp), public, branch `main`. MIT licensed (`LICENSE` + SPDX headers per source file).

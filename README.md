@@ -36,9 +36,9 @@ This is a working prototype, already used day to day for real tracking.
 | Food diary (read, add, edit, delete) | ✅ Working |
 | Weight log | ✅ Working |
 | Exercise log | ✅ Working |
-| Barcode lookup | 🔜 Built, not switched on yet - needs one more one-time setup step ([issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)) |
-| Autocomplete-as-you-type | 🔜 Built, not switched on yet - same setup step ([issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)) |
-| Search foods/recipes by name | ⏳ Not built yet - same setup step ([issue #5](https://github.com/mregen/fatsecret-mcp/issues/5)) |
+| Search foods by name | ✅ Working |
+| Barcode lookup | 🔜 Built, not switched on yet - needs the `barcode` scope granted on your FatSecret app ([issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)) |
+| Autocomplete-as-you-type | 🔜 Built, not switched on yet - needs the `premier` scope granted on your FatSecret app ([issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)) |
 | Run as a shared, always-on server | ⏳ Not ready yet |
 
 See [open issues](https://github.com/mregen/fatsecret-mcp/issues) for the current roadmap.
@@ -60,7 +60,8 @@ for the auth work that's needed first and the reasoning behind deferring contain
 | `get_food_entries`, `add_food_entry`, `edit_food_entry`, `delete_food_entry` | OAuth 1.0a | Food diary CRUD |
 | `get_weight_history`, `add_weight_entry` | OAuth 1.0a | Weight tracking |
 | `get_exercise_entries`, `search_exercises`, `shift_exercise_time` | OAuth 1.0a | FatSecret models a day as a full 24-hour allocation across activities, not independent log entries - see the tool descriptions for how this works |
-| `find_food_by_barcode`, `autocomplete_food` | OAuth 2.0 (not yet configured) | Implemented but unverified against the live API pending a real OAuth 2.0 app |
+| `search_foods` | OAuth 2.0 (`basic` scope) | Search FatSecret's food database by name |
+| `find_food_by_barcode`, `autocomplete_food` | OAuth 2.0 (`barcode`/`premier` scope - not yet granted) | Implemented and OAuth2 auth confirmed working, but these two calls fail with `invalid_scope` until FatSecret grants the `barcode`/`premier` scopes on your app |
 
 ## Install
 
@@ -173,7 +174,7 @@ Edit `claude_desktop_config.json` (macOS:
         "FatSecret__OAuth1__ConsumerKey": "<your consumer key>",
         "FatSecret__OAuth1__ConsumerSecret": "<your consumer secret>",
         "FatSecret__OAuth1__AccessToken": "<your access token>",
-        "FatSecret__OAuth1__AccessTokenSecret": "<your access token secret>"
+        "FatSecret__OAuth1__AccessTokenSecret": "<your access token secret>",
         "FatSecret__OAuth2__ClientId": "<your client id>",
         "FatSecret__OAuth2__ClientSecret": "<your client secret>"
       }

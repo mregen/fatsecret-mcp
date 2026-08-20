@@ -10,7 +10,7 @@ that.
 - Also packable as a .NET global tool (`PackAsTool`). Docker hosting is intentionally not built yet - see the [Security](../README.md#security) section in the README.
 - Auth:
   - OAuth 1.0a 3-legged flow for the `premier` scope (user food diary, weight, exercise entries) - hand-rolled HMAC-SHA1 signing (`src/FatSecretMcp/Auth/`), no .NET or FatSecret SDK support for this exists.
-  - OAuth 2.0 client-credentials flow for `basic`/`barcode` scope (food/recipe search, autocomplete, barcode lookup).
+  - OAuth 2.0 client-credentials flow, confirmed working end to end for the `basic` scope (food search). `barcode`/`premier` scope calls (barcode lookup, autocomplete) are implemented but still return `invalid_scope` until those scopes are granted on the FatSecret app - see [issue #3](https://github.com/mregen/fatsecret-mcp/issues/3).
 - Target: multi-targets `net8.0;net10.0` (net8.0 is the still-widely-installed LTS through ~Nov 2026; net10.0 is the current LTS through ~Nov 2028) - single project for now, no RID-specific builds.
 
 See also [`multi-tenant-cloud-service.md`](multi-tenant-cloud-service.md) for the (not yet
@@ -38,7 +38,7 @@ dotnet user-secrets set "FatSecret:OAuth1:ConsumerKey" "<your consumer key>"
 dotnet user-secrets set "FatSecret:OAuth1:ConsumerSecret" "<your consumer secret>"
 ```
 
-For OAuth 2.0 (barcode lookup, autocomplete), once you have an app registered for it:
+For OAuth 2.0 (food search, and eventually barcode lookup/autocomplete once their scopes are granted):
 
 ```bash
 dotnet user-secrets set "FatSecret:OAuth2:ClientId" "<your client id>"
@@ -150,5 +150,6 @@ from the packed filename (`FatSecretMcp.<version>.nupkg`) and passed between job
 
 This isn't primarily a security gate (the package contains no credentials either way - see the
 README's [Security](../README.md#security) section for the actual concern) so much as a "not
-polished enough yet" one: OAuth 2.0 is still unverified and food/recipe search isn't
-implemented. Trigger a manual publish run once that's no longer true.
+polished enough yet" one: barcode lookup and autocomplete are still blocked on a FatSecret-side
+scope grant (see [issue #3](https://github.com/mregen/fatsecret-mcp/issues/3)). Trigger a manual
+publish run once that's no longer true.
